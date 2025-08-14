@@ -43,7 +43,7 @@ local Window = Library:CreateWindow({
     Footer = "version: Version 1.0",
     Icon = 128828160470041,
     NotifySide = "Right",
-    ShowCustomCursor = true,
+    ShowCustomCursor = false,
 })
 
 -- Tabs
