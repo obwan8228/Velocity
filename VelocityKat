@@ -49,7 +49,7 @@ local Window = Library:CreateWindow({
 -- Tabs
 local Tabs = {
     Main = Window:AddTab("Main", "user"),
-    Esp = Window:AddTab({Name = "Visuals", Description = "Visuals & Players", Icon = "eye"})
+    Esp = Window:AddTab({Name = "Visuals", Description = "Visuals & Players & World Options", Icon = "eye"})
 }
 
 -- ==== Silent Aim Group ====
@@ -61,25 +61,24 @@ local SAFOVOutline = true
 local C1, C2 = nil, nil
 local SAConnections = {}
 local SAHook = nil
-local HitPart = "HumanoidRootPart" -- default hit part
+local HitPart = "HumanoidRootPart"
+local SAHitChance = 100 -- default 100%
 
 local SAToggle = SAGroup:AddToggle("SilentAimToggle", {
     Text = "Enable Silent Aim",
     Default = false,
-    Tooltip = "Toggle Silent Aim on/off",
     Callback = function(Value)
         if Value then
             local CC = Workspace.CurrentCamera
             local SA = {fov = SAFOV, fovcircle = true}
             local Tgt = nil
-            C1 = Drawing.new("Circle") -- filled
-            C2 = Drawing.new("Circle") -- outline
+            C1 = Drawing.new("Circle")
+            C2 = Drawing.new("Circle")
 
             SAConnections.RenderStepped = RunService.Stepped:Connect(function()
                 local sc = Vector2.new(CC.ViewportSize.X/2, CC.ViewportSize.Y/2)
                 SA.fov = SAFOV
 
-                -- Filled Circle
                 C1.Position = sc
                 C1.Radius = SA.fov
                 C1.Color = FOVColor
@@ -87,7 +86,6 @@ local SAToggle = SAGroup:AddToggle("SilentAimToggle", {
                 C1.Transparency = SAFOVFilled and 0.3 or 0
                 C1.Visible = SAFOVFilled
 
-                -- Outline Circle
                 C2.Position = sc
                 C2.Radius = SA.fov
                 C2.Color = FOVColor
@@ -95,7 +93,6 @@ local SAToggle = SAGroup:AddToggle("SilentAimToggle", {
                 C2.Filled = false
                 C2.Visible = SAFOVOutline
 
-                -- Find closest target
                 local closest, dist = nil, SA.fov
                 for _, v in ipairs(Players:GetPlayers()) do
                     local h = v.Character and v.Character:FindFirstChild(HitPart)
@@ -126,8 +123,10 @@ local SAToggle = SAGroup:AddToggle("SilentAimToggle", {
             SAHook = hookmetamethod(game, "__namecall", function(self,...)
                 local a={...}
                 if not checkcaller() and getnamecallmethod()=="FindPartOnRayWithIgnoreList" and Tgt and Tgt.Character then
-                    local o = a[1].Origin
-                    a[1] = Ray.new(o, Tgt.Character[HitPart].Position-o)
+                    if math.random(1,100) <= SAHitChance then
+                        local o = a[1].Origin
+                        a[1] = Ray.new(o, Tgt.Character[HitPart].Position-o)
+                    end
                 end
                 return SAHook(self, unpack(a))
             end)
@@ -148,52 +147,40 @@ SAGroup:AddSlider("SAFOVSlider", {
     Min = 10,
     Max = 500,
     Rounding = 1,
-    Callback = function(Value)
-        SAFOV = Value
-    end
+    Callback = function(Value) SAFOV = Value end
 })
 
--- FOV Color Picker
+-- FOV Color
 SAToggle:AddColorPicker("SAFOVColor", {
     Default = FOVColor,
     Title = "FOV Color",
-    Transparency = 0,
-    Callback = function(Value)
-        FOVColor = Value
-    end
+    Callback = function(Value) FOVColor = Value end
 })
 
--- Filled toggle
-SAGroup:AddToggle("SAFOVFilledToggle", {
-    Text = "Filled FOV",
-    Default = true,
-    Callback = function(Value)
-        SAFOVFilled = Value
-    end
-})
+-- Filled/Outline toggles
+SAGroup:AddToggle("SAFOVFilledToggle",{Text="Filled FOV",Default=true,Callback=function(Value) SAFOVFilled=Value end})
+SAGroup:AddToggle("SAFOVOutlineToggle",{Text="Outline FOV",Default=true,Callback=function(Value) SAFOVOutline=Value end})
 
--- Outline toggle
-SAGroup:AddToggle("SAFOVOutlineToggle", {
-    Text = "Outline FOV",
-    Default = true,
-    Callback = function(Value)
-        SAFOVOutline = Value
-    end
-})
-
--- Wall Check Toggle
-local SAOptionsGroup = Tabs.Main:AddLeftGroupbox("Silent Aim Options", "eye")
-SAOptionsGroup:AddToggle("SAWallCheck", { Text = "Wall Check", Default = false, Tooltip = "Only target visible players" })
+-- Wall Check
+local SAOptionsGroup = Tabs.Main:AddRightGroupbox("Silent Aim Options", "eye")
+SAOptionsGroup:AddToggle("SAWallCheck", { Text = "Wall Check", Default = false })
 
 -- Hit Part Dropdown
-SAGroup:AddDropdown("SAHitPartDropdown", {
-    Text = "Hit Part",
-    Values = {"Head", "Torso", "HumanoidRootPart"},
-    Default = "HumanoidRootPart",
-    Tooltip = "Select which part to aim at",
-    Callback = function(Value)
-        HitPart = Value
-    end
+SAGroup:AddDropdown("SAHitPartDropdown",{
+    Text="Hit Part",
+    Values={"Head","Torso","HumanoidRootPart"},
+    Default="HumanoidRootPart",
+    Callback=function(Value) HitPart=Value end
+})
+
+-- Hit Chance Slider
+SAGroup:AddSlider("SAHitChanceSlider",{
+    Text="Hit Chance %",
+    Default=100,
+    Min=1,
+    Max=100,
+    Rounding=1,
+    Callback=function(Value) SAHitChance=Value end
 })
 
 -- ==== ESP / Visuals ====
@@ -213,20 +200,6 @@ local ESPDistanceToggle = ESPGroup:AddToggle("ESPDistance", {Text = "Show Distan
 local ESPCornersToggle = ESPGroup:AddToggle("ESPCorners", {Text = "Show Outline Box", Default = false})
 local ESPWeaponToggle = ESPGroup:AddToggle("ESPWeapon", {Text = "Show Weapon/Tool", Default = false})
 
--- Field of view camera slider
-local CameraFOV = 70
-ESPGroup:AddSlider("CameraFOVSlider", {
-    Text = "Camera Feild Of View ",
-    Default = CameraFOV,
-    Min = 50,
-    Max = 120,
-    Rounding = 1,
-    Callback = function(Value)
-        CameraFOV = Value
-        Camera.FieldOfView = CameraFOV
-    end
-})
-
 -- Storage for drawings and highlights
 local Drawings = {}
 local Highlights = {}
@@ -240,63 +213,58 @@ end
 local function removeESP(plr)
     if Drawings[plr] then
         for _, obj in pairs(Drawings[plr]) do
-            if typeof(obj) == "table" then
+            if typeof(obj)=="table" then
                 for _, d in pairs(obj) do if d.Remove then d:Remove() end end
-            elseif obj.Remove then
-                obj:Remove()
-            end
+            elseif obj.Remove then obj:Remove() end
         end
-        Drawings[plr] = nil
+        Drawings[plr]=nil
     end
     if Highlights[plr] then
         Highlights[plr]:Destroy()
-        Highlights[plr] = nil
+        Highlights[plr]=nil
     end
 end
 
--- Build 8 corner lines
+-- Corner lines
 local function createCorners()
     local lines = {}
-    for _ = 1, 8 do
+    for _=1,8 do
         local l = Drawing.new("Line")
         l.Color = Color3.new(1,1,1)
         l.Thickness = 2
         l.Visible = false
-        table.insert(lines, l)
+        table.insert(lines,l)
     end
     return lines
 end
 
 -- Initialize ESP for a player
 local function createESP(plr)
-    if plr == LP then return end
-
-    Drawings[plr] = {
-        DisplayName = Drawing.new("Text"),
-        Username = Drawing.new("Text"),
-        Distance = Drawing.new("Text"),
-        HealthBar = Drawing.new("Line"),
-        HealthText = Drawing.new("Text"),
-        Corners = createCorners(),
-        Weapon = Drawing.new("Text")
+    if plr==LP then return end
+    Drawings[plr]={
+        DisplayName=Drawing.new("Text"),
+        Username=Drawing.new("Text"),
+        Distance=Drawing.new("Text"),
+        HealthBar=Drawing.new("Line"),
+        HealthText=Drawing.new("Text"),
+        Corners=createCorners(),
+        Weapon=Drawing.new("Text")
     }
-
-    for _, obj in pairs({Drawings[plr].DisplayName, Drawings[plr].Username, Drawings[plr].Distance, Drawings[plr].HealthText, Drawings[plr].Weapon}) do
-        obj.Visible = false
-        obj.Center = true
-        obj.Outline = true
-        obj.Font = 2
-        obj.Size = 13
-        obj.Color = Color3.new(1,1,1)
+    for _, obj in pairs({Drawings[plr].DisplayName,Drawings[plr].Username,Drawings[plr].Distance,Drawings[plr].HealthText,Drawings[plr].Weapon}) do
+        obj.Visible=false
+        obj.Center=true
+        obj.Outline=true
+        obj.Font=2
+        obj.Size=13
+        obj.Color=Color3.new(1,1,1)
     end
-
-    Drawings[plr].HealthBar.Thickness = 4
-    Drawings[plr].HealthBar.Visible = false
+    Drawings[plr].HealthBar.Thickness=4
+    Drawings[plr].HealthBar.Visible=false
 
     if ESPHighlightToggle.Value then
         local h = Instance.new("Highlight")
-        h.FillColor = Color3.fromRGB(0, 0, 255)
-        h.OutlineColor = Color3.new(1, 1, 1)
+        h.FillColor = Color3.fromRGB(0,0,255)
+        h.OutlineColor = Color3.new(1,1,1)
         h.FillTransparency = 0.25
         h.OutlineTransparency = 0
         h.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
@@ -313,177 +281,230 @@ RunService.RenderStepped:Connect(function()
     end
 
     for _, plr in pairs(Players:GetPlayers()) do
-        if plr ~= LP and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
-            local char = plr.Character
-            local hrp = char:FindFirstChild("HumanoidRootPart")
-            local hum = char:FindFirstChildOfClass("Humanoid")
-            local pos, vis = Camera:WorldToViewportPoint(hrp.Position)
-            local dist = (Camera.CFrame.Position - hrp.Position).Magnitude
+        if plr~=LP and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+            local char=plr.Character
+            local hrp=char:FindFirstChild("HumanoidRootPart")
+            local hum=char:FindFirstChildOfClass("Humanoid")
+            local pos,vis = Camera:WorldToViewportPoint(hrp.Position)
+            local dist = (Camera.CFrame.Position-hrp.Position).Magnitude
 
             if not Drawings[plr] then createESP(plr) end
-            local obj = Drawings[plr]
+            local obj=Drawings[plr]
 
-            if vis and dist <= 1000 then
-                local scale = 1 / (dist / 100)
-                local boxW = 30 * scale
-                local boxH = 30 * scale
-                local size = Vector2.new(boxW, boxH)
-                local tl = Vector2.new(pos.X - size.X/2, pos.Y - size.Y/2)
-                local tr = tl + Vector2.new(size.X, 0)
-                local bl = tl + Vector2.new(0, size.Y)
-                local br = tl + size
+            if vis and dist<=1000 then
+                local scale=1/(dist/100)
+                local boxW=30*scale
+                local boxH=30*scale
+                local size=Vector2.new(boxW,boxH)
+                local tl=Vector2.new(pos.X-size.X/2,pos.Y-size.Y/2)
+                local tr=tl+Vector2.new(size.X,0)
+                local bl=tl+Vector2.new(0,size.Y)
+                local br=tl+size
+                local len=8*scale
+                local c=obj.Corners
+                for i=1,8 do c[i].Visible=ESPCornersToggle.Value end
+                c[1].From=tl;c[1].To=tl+Vector2.new(len,0)
+                c[2].From=tl;c[2].To=tl+Vector2.new(0,len)
+                c[3].From=tr;c[3].To=tr-Vector2.new(len,0)
+                c[4].From=tr;c[4].To=tr+Vector2.new(0,len)
+                c[5].From=bl;c[5].To=bl+Vector2.new(len,0)
+                c[6].From=bl;c[6].To=bl-Vector2.new(0,len)
+                c[7].From=br;c[7].To=br-Vector2.new(0,len)
+                c[8].From=br;c[8].To=br-Vector2.new(0,len)
 
-                local len = 8 * scale
-                local c = obj.Corners
+                obj.DisplayName.Position=Vector2.new(pos.X,tl.Y-35)
+                obj.DisplayName.Text=plr.DisplayName
+                obj.DisplayName.Visible=ESPNameToggle.Value
 
-                -- Draw corner lines
-                for i=1,8 do
-                    c[i].Visible = ESPCornersToggle.Value
-                end
-                c[1].From = tl; c[1].To = tl + Vector2.new(len,0)
-                c[2].From = tl; c[2].To = tl + Vector2.new(0,len)
-                c[3].From = tr; c[3].To = tr - Vector2.new(len,0)
-                c[4].From = tr; c[4].To = tr + Vector2.new(0,len)
-                c[5].From = bl; c[5].To = bl + Vector2.new(len,0)
-                c[6].From = bl; c[6].To = bl - Vector2.new(0,len)
-                c[7].From = br; c[7].To = br - Vector2.new(len,0)
-                c[8].From = br; c[8].To = br - Vector2.new(0,len)
+                obj.Username.Position=Vector2.new(pos.X,tl.Y-23)
+                obj.Username.Text=plr.Name
+                obj.Username.Visible=ESPNameToggle.Value
 
-                -- DisplayName
-                obj.DisplayName.Position = Vector2.new(pos.X, tl.Y - 35)
-                obj.DisplayName.Text = plr.DisplayName
-                obj.DisplayName.Visible = ESPNameToggle.Value
+                obj.Distance.Position=Vector2.new(pos.X,br.Y+4)
+                obj.Distance.Text=math.floor(dist).." Studs"
+                obj.Distance.Visible=ESPDistanceToggle.Value
 
-                -- Username
-                obj.Username.Position = Vector2.new(pos.X, tl.Y - 23)
-                obj.Username.Text = plr.Name
-                obj.Username.Visible = ESPNameToggle.Value
-
-                -- Distance
-                obj.Distance.Position = Vector2.new(pos.X, br.Y + 4)
-                obj.Distance.Text = math.floor(dist).." Studs"
-                obj.Distance.Visible = ESPDistanceToggle.Value
-
-                -- Health Bar
                 if hum then
-                    local hpPercent = math.clamp(hum.Health / hum.MaxHealth,0,1)
-                    local barHeight = size.Y * hpPercent
-                    local from = Vector2.new(tl.X - 6, br.Y)
-                    local to = Vector2.new(tl.X - 6, br.Y - barHeight)
-                    obj.HealthBar.From = from
-                    obj.HealthBar.To = to
-                    obj.HealthBar.Color = getHealthColor(hpPercent)
-                    obj.HealthBar.Visible = ESPHealthToggle.Value
+                    local hpPercent=math.clamp(hum.Health/hum.MaxHealth,0,1)
+                    local barHeight=size.Y*hpPercent
+                    local from=Vector2.new(tl.X-6,br.Y)
+                    local to=Vector2.new(tl.X-6,br.Y-barHeight)
+                    obj.HealthBar.From=from
+                    obj.HealthBar.To=to
+                    obj.HealthBar.Color=getHealthColor(hpPercent)
+                    obj.HealthBar.Visible=ESPHealthToggle.Value
 
-                    obj.HealthText.Position = Vector2.new(from.X - 10, to.Y - 6)
-                    obj.HealthText.Text = tostring(math.floor(hum.Health))
-                    obj.HealthText.Color = getHealthColor(hpPercent)
-                    obj.HealthText.Visible = ESPHealthToggle.Value
+                    obj.HealthText.Position=Vector2.new(from.X-10,to.Y-6)
+                    obj.HealthText.Text=tostring(math.floor(hum.Health))
+                    obj.HealthText.Color=getHealthColor(hpPercent)
+                    obj.HealthText.Visible=ESPHealthToggle.Value
                 end
 
-                -- Weapon ESP
                 if ESPWeaponToggle.Value then
-                    local tool = nil
+                    local tool=nil
                     for _, child in ipairs(char:GetChildren()) do
                         if child:IsA("Tool") then
-                            tool = child
+                            tool=child
                             break
                         end
                     end
                     if tool then
-                        obj.Weapon.Text = tool.Name
-                        obj.Weapon.Position = Vector2.new(pos.X, tl.Y - 50)
-                        obj.Weapon.Visible = true
+                        obj.Weapon.Text=tool.Name
+                        obj.Weapon.Position=Vector2.new(pos.X,tl.Y-50)
+                        obj.Weapon.Visible=true
                     else
-                        obj.Weapon.Visible = false
+                        obj.Weapon.Visible=false
                     end
-                else
-                    obj.Weapon.Visible = false
-                end
+                else obj.Weapon.Visible=false end
 
-                -- Chams
                 if Highlights[plr] then
-                    Highlights[plr].Adornee = char
-                    Highlights[plr].Enabled = ESPHighlightToggle.Value
+                    Highlights[plr].Adornee=char
+                    Highlights[plr].Enabled=ESPHighlightToggle.Value
                 end
             else
                 for _, obj2 in pairs(obj) do
-                    if typeof(obj2) == "table" then
-                        for _, x in pairs(obj2) do x.Visible = false end
-                    elseif obj2.Visible then
-                        obj2.Visible = false
-                    end
+                    if typeof(obj2)=="table" then
+                        for _, x in pairs(obj2) do x.Visible=false end
+                    elseif obj2.Visible then obj2.Visible=false end
                 end
-                if Highlights[plr] then Highlights[plr].Enabled = false end
+                if Highlights[plr] then Highlights[plr].Enabled=false end
             end
-        else
-            removeESP(plr)
-        end
+        else removeESP(plr) end
     end
 end)
 
 Players.PlayerRemoving:Connect(removeESP)
 
--- ... your ESP toggles here ...
-
--- Add this after ESP toggles:
+-- ==== World Groupbox ====
 local WorldGroup = Tabs.Esp:AddRightGroupbox("World", "globe")
 
-WorldGroup:AddButton("Stretched Resolution", function()
-    -- Put your resolution code here
-    getgenv().Resolution = { [".gg/scripters"] = 0.65 }
-
-    local Camera = workspace.CurrentCamera
-    if getgenv().gg_scripters == nil then
-        game:GetService("RunService").RenderStepped:Connect(function()
-            Camera.CFrame = Camera.CFrame * CFrame.new(0, 0, 0, 1, 0, 0, 0, getgenv().Resolution[".gg/scripters"], 0, 0, 0, 1)
-        end)
+local CameraFOV = 70
+WorldGroup:AddSlider("CameraFOVSlider",{
+    Text="Camera Field Of View",
+    Default=CameraFOV,
+    Min=50,
+    Max=120,
+    Rounding=1,
+    Callback=function(Value)
+        CameraFOV=Value
+        Camera.FieldOfView=CameraFOV
     end
-    getgenv().gg_scripters = "Aori0001"
-end)
+})
 
--- FPS Boost button in Visuals tab
-WorldGroup:AddButton("FPS Boost (BloxStrap)", function()
-    loadstring(game:HttpGet('https://raw.githubusercontent.com/qwertyui-is-back/Bloxstrap/main/Initiate.lua', true))()
-end)
-
--- Create ColorCorrectionEffect
+local VisualSaturation = 100
+local VisualBrightness = 1
 local Lighting = game:GetService("Lighting")
 local ColorEffect = Instance.new("ColorCorrectionEffect")
 ColorEffect.Parent = Lighting
-ColorEffect.Saturation = 1 -- default full saturation (1 = normal, 0 = grayscale)
-ColorEffect.TintColor = Color3.new(1,1,1) -- optional, keep default
+ColorEffect.Saturation=VisualSaturation/100
+ColorEffect.Brightness=VisualBrightness/35
+ColorEffect.TintColor=Color3.new(1,1,1)
 
--- Saturation Slider
-local VisualSaturation = 100 -- default 0-100 scale
-ESPGroup:AddSlider("VisualSaturationSlider", {
-    Text = "Saturation",
-    Default = VisualSaturation,
-    Min = 0,
-    Max = 100,
-    Rounding = 1,
+WorldGroup:AddSlider("VisualSaturationSlider",{Text="Saturation",Default=VisualSaturation,Min=0,Max=100,Rounding=1,Callback=function(Value)
+    VisualSaturation=Value
+    ColorEffect.Saturation=VisualSaturation/100
+end})
+
+WorldGroup:AddSlider("VisualBrightnessSlider",{Text="Brightness",Default=VisualBrightness,Min=1,Max=10,Rounding=1,Callback=function(Value)
+    VisualBrightness=Value
+    ColorEffect.Brightness=VisualBrightness/10
+end})
+
+WorldGroup:AddButton("Stretched Resolution",function()
+    getgenv().Resolution={[".gg/scripters"]=0.65}
+    local Camera=workspace.CurrentCamera
+    if getgenv().gg_scripters==nil then
+        game:GetService("RunService").RenderStepped:Connect(function()
+            Camera.CFrame=Camera.CFrame*CFrame.new(0,0,0,1,0,0,0,getgenv().Resolution[".gg/scripters"],0,0,0,1)
+        end)
+    end
+    getgenv().gg_scripters="Aori0001"
+end)
+
+WorldGroup:AddButton("FPS Boost (BloxStrap)",function()
+    loadstring(game:HttpGet('https://raw.githubusercontent.com/qwertyui-is-back/Bloxstrap/main/Initiate.lua', true))()
+end)
+
+-- // CONFIGURATION TAB
+local HttpService = game:GetService("HttpService")
+local ConfigFolder = "VelocityConfigs" -- folder in executor workspace
+
+-- create folder if it doesn't exist
+if not isfolder(ConfigFolder) then
+    makefolder(ConfigFolder)
+end
+
+local ConfigTab = Window:AddTab("Configuration", 6023426926) -- gear icon
+local ConfigGroup = ConfigTab:AddLeftGroupbox("Config Manager")
+
+local ConfigName = ""
+local AutoLoadLast = false
+
+ConfigGroup:AddInput("ConfigNameInput", {
+    Text = "Config Name",
+    Default = "",
+    Placeholder = "Enter config name...",
     Callback = function(Value)
-        VisualSaturation = Value
-        ColorEffect.Saturation = VisualSaturation / 100 -- convert to 0–1
+        ConfigName = Value
     end
 })
 
--- Default Brightness value (0–35 scale)
-local VisualBrightness = 35
+-- Save config
+ConfigGroup:AddButton("Save Config", function()
+    if ConfigName == "" then return end
+    local Data = Library:GetConfig() -- gets all UI values
+    writefile(ConfigFolder.."/"..ConfigName..".json", HttpService:JSONEncode(Data))
+    Library:Notify("Config '"..ConfigName.."' saved!")
+end)
 
--- Add Brightness slider to the ESP/Visuals groupbox
-ESPGroup:AddSlider("VisualBrightnessSlider", {
-    Text = "Brightness",
-    Default = VisualBrightness,
-    Min = 0,
-    Max = 35,  -- maximum is now 35
-    Rounding = 1,
+-- Load config
+ConfigGroup:AddButton("Load Config", function()
+    if ConfigName == "" then return end
+    if isfile(ConfigFolder.."/"..ConfigName..".json") then
+        local Data = HttpService:JSONDecode(readfile(ConfigFolder.."/"..ConfigName..".json"))
+        Library:LoadConfig(Data)
+        Library:Notify("Config '"..ConfigName.."' loaded!")
+    else
+        Library:Notify("Config not found!")
+    end
+end)
+
+-- Delete config
+ConfigGroup:AddButton("Delete Config", function()
+    if ConfigName == "" then return end
+    if isfile(ConfigFolder.."/"..ConfigName..".json") then
+        delfile(ConfigFolder.."/"..ConfigName..".json")
+        Library:Notify("Config '"..ConfigName.."' deleted!")
+    else
+        Library:Notify("Config not found!")
+    end
+end)
+
+-- Auto-load last config toggle
+ConfigGroup:AddToggle("AutoLoadLastConfig", {
+    Text = "Auto-load Last Config",
+    Default = false,
     Callback = function(Value)
-        VisualBrightness = Value
-        -- Apply brightness via the ColorEffect (0–1 scale)
-        ColorEffect.Brightness = VisualBrightness / 35 -- convert to 0–1 scale
+        AutoLoadLast = Value
+        if Value then
+            writefile(ConfigFolder.."/AutoLoad.json", ConfigName)
+        else
+            if isfile(ConfigFolder.."/AutoLoad.json") then
+                delfile(ConfigFolder.."/AutoLoad.json")
+            end
+        end
     end
 })
+
+-- Auto-load if setting exists
+if isfile(ConfigFolder.."/AutoLoad.json") then
+    local LastConfig = readfile(ConfigFolder.."/AutoLoad.json")
+    if isfile(ConfigFolder.."/"..LastConfig..".json") then
+        local Data = HttpService:JSONDecode(readfile(ConfigFolder.."/"..LastConfig..".json"))
+        Library:LoadConfig(Data)
+        Library:Notify("Auto-loaded config: "..LastConfig)
+    end
+end
 
 -- ==== Finish Setup ====
 ThemeManager:SetLibrary(Library)
