@@ -163,222 +163,254 @@ SAGroup:AddDropdown("SAHitPartDropdown", {
     Default = "HumanoidRootPart",
     Tooltip = "Select which part to aim at",
     Callback = function(Value)
-        if Value == "Head" then
-            HitPart = "Head"
-        elseif Value == "Torso" then
-            HitPart = "Torso"
-        else
-            HitPart = "HumanoidRootPart"
-        end
+        HitPart = Value
     end
 })
 
 -- ==== ESP / Visuals ====
 local ESPGroup = Tabs.Esp:AddLeftGroupbox("Player Visuals", "eye")
-local ActiveHighlights = {}
-local PlayerAddedConn, CharacterAddedConns = nil, {}
-local highlightColor = Color3.fromRGB(255, 0, 0)
 
--- Add FOV slider to Visuals tab
+-- Highlight toggle (chams)
+local ESPHighlightToggle = ESPGroup:AddToggle("ESPEnabled", {
+    Text = "Enable Highlight",
+    Default = false,
+    Tooltip = "Enable player highlights (chams)"
+})
+
+-- Sub-toggles
+local ESPNameToggle = ESPGroup:AddToggle("ESPName", {Text = "Show Names", Default = false})
+local ESPHealthToggle = ESPGroup:AddToggle("ESPHealthBar", {Text = "Show Health Bars", Default = false})
+local ESPDistanceToggle = ESPGroup:AddToggle("ESPDistance", {Text = "Show Distance", Default = false})
+local ESPCornersToggle = ESPGroup:AddToggle("ESPCorners", {Text = "Show Outline Box", Default = false})
+local ESPWeaponToggle = ESPGroup:AddToggle("ESPWeapon", {Text = "Show Weapon/Tool", Default = false})
+
+-- Field of view camera slider
+local CameraFOV = 70
 ESPGroup:AddSlider("CameraFOVSlider", {
-    Text = "Field of View",
-    Default = Camera.FieldOfView,
-    Min = 30,
+    Text = "Camera Feild Of View",
+    Default = CameraFOV,
+    Min = 50,
     Max = 120,
     Rounding = 1,
     Callback = function(Value)
-        Camera.FieldOfView = Value
+        CameraFOV = Value
+        Camera.FieldOfView = CameraFOV
     end
 })
 
-local ESPToggle = ESPGroup:AddToggle("ESPEnabled", {
-    Text = "Enable Highlight",
-    Default = false,
-    Tooltip = "Highlight all players",
-    Callback = function(Value)
-        if Value then
-            for _, plr in pairs(Players:GetPlayers()) do
-                if plr ~= LP then
-                    if not ActiveHighlights[plr] then
-                        local h = Instance.new("Highlight")
-                        h.Name = "ESPHighlight"
-                        h.FillColor = highlightColor
-                        h.FillTransparency = 0.5
-                        h.OutlineTransparency = 0
-                        h.Parent = Workspace
-                        ActiveHighlights[plr] = h
-                    end
-                    CharacterAddedConns[plr] = plr.CharacterAdded:Connect(function(char)
-                        if Toggles.ESPEnabled.Value and ActiveHighlights[plr] then
-                            ActiveHighlights[plr].Adornee = char
-                        end
-                    end)
-                    if plr.Character then
-                        ActiveHighlights[plr].Adornee = plr.Character
-                    end
-                end
-            end
-            PlayerAddedConn = Players.PlayerAdded:Connect(function(plr)
-                if plr ~= LP then
-                    if not ActiveHighlights[plr] then
-                        local h = Instance.new("Highlight")
-                        h.Name = "ESPHighlight"
-                        h.FillColor = highlightColor
-                        h.FillTransparency = 0.5
-                        h.OutlineTransparency = 0
-                        h.Parent = Workspace
-                        ActiveHighlights[plr] = h
-                    end
-                    CharacterAddedConns[plr] = plr.CharacterAdded:Connect(function(char)
-                        if Toggles.ESPEnabled.Value and ActiveHighlights[plr] then
-                            ActiveHighlights[plr].Adornee = char
-                        end
-                    end)
-                    if plr.Character then
-                        ActiveHighlights[plr].Adornee = plr.Character
-                    end
-                end
-            end)
-        else
-            for _, h in pairs(ActiveHighlights) do
-                if typeof(h) == "Instance" then h:Destroy() end
-            end
-            ActiveHighlights = {}
-            if PlayerAddedConn then PlayerAddedConn:Disconnect() end
-            for _, conn in pairs(CharacterAddedConns) do conn:Disconnect() end
-            CharacterAddedConns = {}
-        end
-    end
-})
+-- Storage for drawings and highlights
+local Drawings = {}
+local Highlights = {}
 
-ESPToggle:AddColorPicker("ESPHighlightColor", {
-    Default = highlightColor,
-    Title = "Highlight Color",
-    Transparency = 0,
-    Callback = function(Value)
-        highlightColor = Value
-        for _, h in pairs(ActiveHighlights) do
-            if typeof(h) == "Instance" then
-                h.FillColor = highlightColor
-            end
-        end
-    end
-})
+-- Health color gradient
+local function getHealthColor(p)
+    return Color3.fromHSV(p * 0.33, 1, 1)
+end
 
-ESPGroup:AddToggle("ESPName", {Text = "Show Names", Default = true})
-ESPGroup:AddToggle("ESPHealthBar", {Text = "Show Health Bars", Default = true})
-ESPGroup:AddToggle("ESPDistance", {Text = "Show Distance", Default = true})
-ESPGroup:AddToggle("ESPCorners", {Text = "Show Outline Box", Default = true})
-
--- Drawing ESP
-local ESPObjects = {}
-local function ClearESP(plr)
-    if ESPObjects[plr] then
-        for _, obj in pairs(ESPObjects[plr]) do
-            if type(obj) == "table" then
-                for _, line in pairs(obj) do line:Remove() end
-            else
+-- Cleanup ESP for a player
+local function removeESP(plr)
+    if Drawings[plr] then
+        for _, obj in pairs(Drawings[plr]) do
+            if typeof(obj) == "table" then
+                for _, d in pairs(obj) do if d.Remove then d:Remove() end end
+            elseif obj.Remove then
                 obj:Remove()
             end
         end
-        ESPObjects[plr] = nil
+        Drawings[plr] = nil
+    end
+    if Highlights[plr] then
+        Highlights[plr]:Destroy()
+        Highlights[plr] = nil
     end
 end
 
-local function CreateESP(plr)
-    ESPObjects[plr] = {
-        Name = Drawing.new("Text"),
+-- Build 8 corner lines
+local function createCorners()
+    local lines = {}
+    for _ = 1, 8 do
+        local l = Drawing.new("Line")
+        l.Color = Color3.new(1,1,1)
+        l.Thickness = 2
+        l.Visible = false
+        table.insert(lines, l)
+    end
+    return lines
+end
+
+-- Initialize ESP for a player
+local function createESP(plr)
+    if plr == LP then return end
+
+    Drawings[plr] = {
+        DisplayName = Drawing.new("Text"),
+        Username = Drawing.new("Text"),
         Distance = Drawing.new("Text"),
-        HealthBarOutline = Drawing.new("Line"),
         HealthBar = Drawing.new("Line"),
-        BoxLines = {}
+        HealthText = Drawing.new("Text"),
+        Corners = createCorners(),
+        Weapon = Drawing.new("Text")
     }
-    for i = 1, 8 do
-        local line = Drawing.new("Line")
-        table.insert(ESPObjects[plr].BoxLines, line)
+
+    for _, obj in pairs({Drawings[plr].DisplayName, Drawings[plr].Username, Drawings[plr].Distance, Drawings[plr].HealthText, Drawings[plr].Weapon}) do
+        obj.Visible = false
+        obj.Center = true
+        obj.Outline = true
+        obj.Font = 2
+        obj.Size = 13
+        obj.Color = Color3.new(1,1,1)
     end
-    ESPObjects[plr].Name.Size = 13
-    ESPObjects[plr].Name.Center = true
-    ESPObjects[plr].Name.Outline = true
-    ESPObjects[plr].Name.Color = Color3.new(1, 1, 1)
-    ESPObjects[plr].Distance.Size = 13
-    ESPObjects[plr].Distance.Center = true
-    ESPObjects[plr].Distance.Outline = true
-    ESPObjects[plr].Distance.Color = Color3.new(1, 1, 1)
+
+    Drawings[plr].HealthBar.Thickness = 4
+    Drawings[plr].HealthBar.Visible = false
+
+    if ESPHighlightToggle.Value then
+        local h = Instance.new("Highlight")
+        h.FillColor = Color3.fromRGB(0, 0, 255)
+        h.OutlineColor = Color3.new(1, 1, 1)
+        h.FillTransparency = 0.25
+        h.OutlineTransparency = 0
+        h.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+        h.Parent = game.CoreGui
+        Highlights[plr] = h
+    end
 end
 
+-- ESP Render Loop
 RunService.RenderStepped:Connect(function()
+    if not ESPHighlightToggle.Value and not ESPNameToggle.Value and not ESPHealthToggle.Value and not ESPDistanceToggle.Value and not ESPCornersToggle.Value and not ESPWeaponToggle.Value then
+        for _, plr in pairs(Players:GetPlayers()) do removeESP(plr) end
+        return
+    end
+
     for _, plr in pairs(Players:GetPlayers()) do
         if plr ~= LP and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
-            if not ESPObjects[plr] then CreateESP(plr) end
-            local obj = ESPObjects[plr]
-            local root = plr.Character.HumanoidRootPart
-            local hum = plr.Character:FindFirstChildOfClass("Humanoid")
-            local headPos, onScreen = Camera:WorldToViewportPoint(plr.Character.Head.Position + Vector3.new(0,0.5,0))
-            local legPos = Camera:WorldToViewportPoint(root.Position - Vector3.new(0,2.5,0))
-            if not onScreen or hum.Health <= 0 then
-                ClearESP(plr)
-            else
-                local height = math.abs(headPos.Y - legPos.Y)
-                local width = height / 2
-                if Toggles.ESPName.Value then
-                    obj.Name.Visible = true
-                    obj.Name.Position = Vector2.new(headPos.X, headPos.Y - 15)
-                    obj.Name.Text = plr.Name
-                else
-                    obj.Name.Visible = false
+            local char = plr.Character
+            local hrp = char:FindFirstChild("HumanoidRootPart")
+            local hum = char:FindFirstChildOfClass("Humanoid")
+            local pos, vis = Camera:WorldToViewportPoint(hrp.Position)
+            local dist = (Camera.CFrame.Position - hrp.Position).Magnitude
+
+            if not Drawings[plr] then createESP(plr) end
+            local obj = Drawings[plr]
+
+            if vis and dist <= 1000 then
+                local scale = 1 / (dist / 100)
+                local boxW = 30 * scale
+                local boxH = 30 * scale
+                local size = Vector2.new(boxW, boxH)
+                local tl = Vector2.new(pos.X - size.X/2, pos.Y - size.Y/2)
+                local tr = tl + Vector2.new(size.X, 0)
+                local bl = tl + Vector2.new(0, size.Y)
+                local br = tl + size
+
+                local len = 8 * scale
+                local c = obj.Corners
+
+                -- Draw corner lines
+                for i=1,8 do
+                    c[i].Visible = ESPCornersToggle.Value
                 end
-                if Toggles.ESPDistance.Value then
-                    obj.Distance.Visible = true
-                    obj.Distance.Position = Vector2.new(headPos.X, legPos.Y + 5)
-                    obj.Distance.Text = string.format("%d Studs", (root.Position - LP.Character.HumanoidRootPart.Position).Magnitude)
-                else
-                    obj.Distance.Visible = false
+                c[1].From = tl; c[1].To = tl + Vector2.new(len,0)
+                c[2].From = tl; c[2].To = tl + Vector2.new(0,len)
+                c[3].From = tr; c[3].To = tr - Vector2.new(len,0)
+                c[4].From = tr; c[4].To = tr + Vector2.new(0,len)
+                c[5].From = bl; c[5].To = bl + Vector2.new(len,0)
+                c[6].From = bl; c[6].To = bl - Vector2.new(0,len)
+                c[7].From = br; c[7].To = br - Vector2.new(len,0)
+                c[8].From = br; c[8].To = br - Vector2.new(0,len)
+
+                -- DisplayName
+                obj.DisplayName.Position = Vector2.new(pos.X, tl.Y - 35)
+                obj.DisplayName.Text = plr.DisplayName
+                obj.DisplayName.Visible = ESPNameToggle.Value
+
+                -- Username
+                obj.Username.Position = Vector2.new(pos.X, tl.Y - 23)
+                obj.Username.Text = plr.Name
+                obj.Username.Visible = ESPNameToggle.Value
+
+                -- Distance
+                obj.Distance.Position = Vector2.new(pos.X, br.Y + 4)
+                obj.Distance.Text = math.floor(dist).." Studs"
+                obj.Distance.Visible = ESPDistanceToggle.Value
+
+                -- Health Bar
+                if hum then
+                    local hpPercent = math.clamp(hum.Health / hum.MaxHealth,0,1)
+                    local barHeight = size.Y * hpPercent
+                    local from = Vector2.new(tl.X - 6, br.Y)
+                    local to = Vector2.new(tl.X - 6, br.Y - barHeight)
+                    obj.HealthBar.From = from
+                    obj.HealthBar.To = to
+                    obj.HealthBar.Color = getHealthColor(hpPercent)
+                    obj.HealthBar.Visible = ESPHealthToggle.Value
+
+                    obj.HealthText.Position = Vector2.new(from.X - 10, to.Y - 6)
+                    obj.HealthText.Text = tostring(math.floor(hum.Health))
+                    obj.HealthText.Color = getHealthColor(hpPercent)
+                    obj.HealthText.Visible = ESPHealthToggle.Value
                 end
-                if Toggles.ESPHealthBar.Value then
-                    obj.HealthBarOutline.Visible = true
-                    obj.HealthBar.Visible = true
-                    local hpPercent = hum.Health / hum.MaxHealth
-                    obj.HealthBarOutline.From = Vector2.new(headPos.X - width/2 - 5, headPos.Y)
-                    obj.HealthBarOutline.To = Vector2.new(headPos.X - width/2 - 5, legPos.Y)
-                    obj.HealthBarOutline.Color = Color3.new(0,0,0)
-                    obj.HealthBarOutline.Thickness = 3
-                    obj.HealthBar.From = Vector2.new(headPos.X - width/2 - 5, legPos.Y)
-                    obj.HealthBar.To = Vector2.new(headPos.X - width/2 - 5, legPos.Y - height * hpPercent)
-                    obj.HealthBar.Color = Color3.fromRGB(0,255,0)
-                    obj.HealthBar.Thickness = 1.5
-                else
-                    obj.HealthBarOutline.Visible = false
-                    obj.HealthBar.Visible = false
-                end
-                if Toggles.ESPCorners.Value then
-                    local tl = Vector2.new(headPos.X - width/2, headPos.Y)
-                    local tr = Vector2.new(headPos.X + width/2, headPos.Y)
-                    local bl = Vector2.new(headPos.X - width/2, legPos.Y)
-                    local br = Vector2.new(headPos.X + width/2, legPos.Y)
-                    local ll = 6
-                    local lines = obj.BoxLines
-                    lines[1].From, lines[1].To = tl, tl + Vector2.new(ll,0)
-                    lines[2].From, lines[2].To = tl, tl + Vector2.new(0,ll)
-                    lines[3].From, lines[3].To = tr, tr - Vector2.new(ll,0)
-                    lines[4].From, lines[4].To = tr, tr + Vector2.new(0,ll)
-                    lines[5].From, lines[5].To = bl, bl + Vector2.new(ll,0)
-                    lines[6].From, lines[6].To = bl, bl - Vector2.new(0,ll)
-                    lines[7].From, lines[7].To = br, br - Vector2.new(ll,0)
-                    lines[8].From, lines[8].To = br, br - Vector2.new(0,ll)
-                    for _, line in pairs(lines) do
-                        line.Visible = true
-                        line.Color = Color3.new(1,1,1)
-                        line.Thickness = 1
+
+                -- Weapon ESP
+                if ESPWeaponToggle.Value then
+                    local tool = nil
+                    for _, child in ipairs(char:GetChildren()) do
+                        if child:IsA("Tool") then
+                            tool = child
+                            break
+                        end
+                    end
+                    if tool then
+                        obj.Weapon.Text = tool.Name
+                        obj.Weapon.Position = Vector2.new(pos.X, tl.Y - 50)
+                        obj.Weapon.Visible = true
+                    else
+                        obj.Weapon.Visible = false
                     end
                 else
-                    for _, line in pairs(obj.BoxLines) do line.Visible = false end
+                    obj.Weapon.Visible = false
                 end
+
+                -- Chams
+                if Highlights[plr] then
+                    Highlights[plr].Adornee = char
+                    Highlights[plr].Enabled = ESPHighlightToggle.Value
+                end
+            else
+                for _, obj2 in pairs(obj) do
+                    if typeof(obj2) == "table" then
+                        for _, x in pairs(obj2) do x.Visible = false end
+                    elseif obj2.Visible then
+                        obj2.Visible = false
+                    end
+                end
+                if Highlights[plr] then Highlights[plr].Enabled = false end
             end
         else
-            ClearESP(plr)
+            removeESP(plr)
         end
     end
+end)
+
+Players.PlayerRemoving:Connect(removeESP)
+
+-- ==== World Group ====
+local WorldGroup = Tabs.Esp:AddRightGroupbox("World", "globe")
+
+WorldGroup:AddButton("Stretched Resolution", function()
+    -- Original
+    getgenv().Resolution = {
+        [".gg/scripters"] = 0.65
+    }
+
+    local Camera = workspace.CurrentCamera
+    if getgenv().gg_scripters == nil then
+        game:GetService("RunService").RenderStepped:Connect(function()
+            Camera.CFrame = Camera.CFrame * CFrame.new(0, 0, 0, 1, 0, 0, 0, getgenv().Resolution[".gg/scripters"], 0, 0, 0, 1)
+        end)
+    end
+    getgenv().gg_scripters = "Aori0001"
 end)
 
 -- ==== Finish Setup ====
