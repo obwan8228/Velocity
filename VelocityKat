@@ -56,6 +56,8 @@ local Tabs = {
 local SAGroup = Tabs.Main:AddLeftGroupbox("Silent Aim", "crosshair")
 local SAFOV = 100
 local FOVColor = Color3.fromRGB(255,255,255)
+local SAFOVFilled = true
+local SAFOVOutline = true
 local C1, C2 = nil, nil
 local SAConnections = {}
 local SAHook = nil
@@ -70,21 +72,30 @@ local SAToggle = SAGroup:AddToggle("SilentAimToggle", {
             local CC = Workspace.CurrentCamera
             local SA = {fov = SAFOV, fovcircle = true}
             local Tgt = nil
-            C1 = Drawing.new("Circle")
-            C2 = Drawing.new("Circle")
+            C1 = Drawing.new("Circle") -- filled
+            C2 = Drawing.new("Circle") -- outline
 
             SAConnections.RenderStepped = RunService.Stepped:Connect(function()
                 local sc = Vector2.new(CC.ViewportSize.X/2, CC.ViewportSize.Y/2)
                 SA.fov = SAFOV
-                for _, c in ipairs({C1,C2}) do
-                    c.Radius = SA.fov
-                    c.Position = sc
-                    c.Transparency = 0.3
-                    c.Visible = SA.fovcircle
-                end
-                C1.Thickness, C1.Color, C1.ZIndex = 2, FOVColor, 2
-                C2.Thickness, C2.Color, C2.ZIndex = 4, Color3.new(), 1
 
+                -- Filled Circle
+                C1.Position = sc
+                C1.Radius = SA.fov
+                C1.Color = FOVColor
+                C1.Filled = SAFOVFilled
+                C1.Transparency = SAFOVFilled and 0.3 or 0
+                C1.Visible = SAFOVFilled
+
+                -- Outline Circle
+                C2.Position = sc
+                C2.Radius = SA.fov
+                C2.Color = FOVColor
+                C2.Thickness = SAFOVOutline and 2 or 0
+                C2.Filled = false
+                C2.Visible = SAFOVOutline
+
+                -- Find closest target
                 local closest, dist = nil, SA.fov
                 for _, v in ipairs(Players:GetPlayers()) do
                     local h = v.Character and v.Character:FindFirstChild(HitPart)
@@ -152,6 +163,24 @@ SAToggle:AddColorPicker("SAFOVColor", {
     end
 })
 
+-- Filled toggle
+SAGroup:AddToggle("SAFOVFilledToggle", {
+    Text = "Filled FOV",
+    Default = true,
+    Callback = function(Value)
+        SAFOVFilled = Value
+    end
+})
+
+-- Outline toggle
+SAGroup:AddToggle("SAFOVOutlineToggle", {
+    Text = "Outline FOV",
+    Default = true,
+    Callback = function(Value)
+        SAFOVOutline = Value
+    end
+})
+
 -- Wall Check Toggle
 local SAOptionsGroup = Tabs.Main:AddLeftGroupbox("Silent Aim Options", "eye")
 SAOptionsGroup:AddToggle("SAWallCheck", { Text = "Wall Check", Default = false, Tooltip = "Only target visible players" })
@@ -187,7 +216,7 @@ local ESPWeaponToggle = ESPGroup:AddToggle("ESPWeapon", {Text = "Show Weapon/Too
 -- Field of view camera slider
 local CameraFOV = 70
 ESPGroup:AddSlider("CameraFOVSlider", {
-    Text = "Camera Feild Of View",
+    Text = "Camera Feild Of View ",
     Default = CameraFOV,
     Min = 50,
     Max = 120,
@@ -395,14 +424,14 @@ end)
 
 Players.PlayerRemoving:Connect(removeESP)
 
--- ==== World Group ====
+-- ... your ESP toggles here ...
+
+-- Add this after ESP toggles:
 local WorldGroup = Tabs.Esp:AddRightGroupbox("World", "globe")
 
 WorldGroup:AddButton("Stretched Resolution", function()
-    -- Original
-    getgenv().Resolution = {
-        [".gg/scripters"] = 0.65
-    }
+    -- Put your resolution code here
+    getgenv().Resolution = { [".gg/scripters"] = 0.65 }
 
     local Camera = workspace.CurrentCamera
     if getgenv().gg_scripters == nil then
@@ -412,6 +441,49 @@ WorldGroup:AddButton("Stretched Resolution", function()
     end
     getgenv().gg_scripters = "Aori0001"
 end)
+
+-- FPS Boost button in Visuals tab
+WorldGroup:AddButton("FPS Boost (BloxStrap)", function()
+    loadstring(game:HttpGet('https://raw.githubusercontent.com/qwertyui-is-back/Bloxstrap/main/Initiate.lua', true))()
+end)
+
+-- Create ColorCorrectionEffect
+local Lighting = game:GetService("Lighting")
+local ColorEffect = Instance.new("ColorCorrectionEffect")
+ColorEffect.Parent = Lighting
+ColorEffect.Saturation = 1 -- default full saturation (1 = normal, 0 = grayscale)
+ColorEffect.TintColor = Color3.new(1,1,1) -- optional, keep default
+
+-- Saturation Slider
+local VisualSaturation = 100 -- default 0-100 scale
+ESPGroup:AddSlider("VisualSaturationSlider", {
+    Text = "Saturation",
+    Default = VisualSaturation,
+    Min = 0,
+    Max = 100,
+    Rounding = 1,
+    Callback = function(Value)
+        VisualSaturation = Value
+        ColorEffect.Saturation = VisualSaturation / 100 -- convert to 0–1
+    end
+})
+
+-- Default Brightness value (0–35 scale)
+local VisualBrightness = 35
+
+-- Add Brightness slider to the ESP/Visuals groupbox
+ESPGroup:AddSlider("VisualBrightnessSlider", {
+    Text = "Brightness",
+    Default = VisualBrightness,
+    Min = 0,
+    Max = 35,  -- maximum is now 35
+    Rounding = 1,
+    Callback = function(Value)
+        VisualBrightness = Value
+        -- Apply brightness via the ColorEffect (0–1 scale)
+        ColorEffect.Brightness = VisualBrightness / 35 -- convert to 0–1 scale
+    end
+})
 
 -- ==== Finish Setup ====
 ThemeManager:SetLibrary(Library)
