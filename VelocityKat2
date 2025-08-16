@@ -63,6 +63,8 @@ local SAConnections = {}
 local SAHook = nil
 local HitPart = "HumanoidRootPart"
 local SAHitChance = 100 -- default 100%
+local SASnaplines = false
+local SnaplineDrawing = nil
 
 local SAToggle = SAGroup:AddToggle("SilentAimToggle", {
     Text = "Enable Silent Aim",
@@ -93,6 +95,7 @@ local SAToggle = SAGroup:AddToggle("SilentAimToggle", {
                 C2.Filled = false
                 C2.Visible = SAFOVOutline
 
+                -- Find closest target
                 local closest, dist = nil, SA.fov
                 for _, v in ipairs(Players:GetPlayers()) do
                     local h = v.Character and v.Character:FindFirstChild(HitPart)
@@ -118,6 +121,32 @@ local SAToggle = SAGroup:AddToggle("SilentAimToggle", {
                     end
                 end
                 Tgt = closest
+
+                -- Snapline drawing
+                if SASnaplines then
+                    if not SnaplineDrawing then
+                        SnaplineDrawing = Drawing.new("Line")
+                        SnaplineDrawing.Color = Color3.fromRGB(255, 0, 0)
+                        SnaplineDrawing.Thickness = 2
+                        SnaplineDrawing.Visible = true
+                    end
+                    if Tgt and Tgt.Character and Tgt.Character:FindFirstChild(HitPart) then
+                        local tgtPos, onScreen = CC:WorldToViewportPoint(Tgt.Character[HitPart].Position)
+                        if onScreen then
+                            SnaplineDrawing.From = Vector2.new(CC.ViewportSize.X/2, CC.ViewportSize.Y/2)
+                            SnaplineDrawing.To = Vector2.new(tgtPos.X, tgtPos.Y)
+                            SnaplineDrawing.Visible = true
+                        else
+                            SnaplineDrawing.Visible = false
+                        end
+                    else
+                        SnaplineDrawing.Visible = false
+                    end
+                else
+                    if SnaplineDrawing then
+                        SnaplineDrawing.Visible = false
+                    end
+                end
             end)
 
             SAHook = hookmetamethod(game, "__namecall", function(self,...)
@@ -135,7 +164,21 @@ local SAToggle = SAGroup:AddToggle("SilentAimToggle", {
             SAConnections = {}
             if C1 then C1:Remove() end
             if C2 then C2:Remove() end
+            if SnaplineDrawing then SnaplineDrawing:Remove() SnaplineDrawing=nil end
             if SAHook then hookmetamethod(game, "__namecall", SAHook) end
+        end
+    end
+})
+
+-- Snaplines toggle
+SAGroup:AddToggle("SASnaplinesToggle", {
+    Text = "Enable Snaplines",
+    Default = false,
+    Callback = function(Value)
+        SASnaplines = Value
+        if not Value and SnaplineDrawing then
+            SnaplineDrawing:Remove()
+            SnaplineDrawing = nil
         end
     end
 })
