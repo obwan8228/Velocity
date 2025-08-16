@@ -183,6 +183,90 @@ SAGroup:AddSlider("SAHitChanceSlider",{
     Callback=function(Value) SAHitChance=Value end
 })
 
+local SAOptionsGroup = Tabs.Main:AddRightGroupbox("Miscellaneous", "brush")
+SAOptionsGroup:AddToggle("CrosshairToggle", {
+    Text = "Crosshair",
+    Default = false,
+}):OnChanged(function(Value)
+    if Value then
+        -- === CREATE CROSSHAIR ===
+        local RunService = game:GetService("RunService")
+        local Camera = workspace.CurrentCamera
+
+        local Center = Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)
+        local CrosshairLines, LineCount, Radius, LineLength, LineColor = {}, 4, 7, 15, Color3.fromRGB(255,0,0)
+
+        for i = 1, LineCount do
+            local line = Drawing.new("Line")
+            line.Color = LineColor
+            line.Thickness = 2
+            line.Visible = true
+            table.insert(CrosshairLines, line)
+        end
+
+        local Dot = Drawing.new("Circle")
+        Dot.Radius = 2
+        Dot.Position = Center
+        Dot.Color = LineColor
+        Dot.Filled = true
+        Dot.Visible = true
+
+        local VelocityText = Drawing.new("Text")
+        VelocityText.Text = "Velocity"
+        VelocityText.Position = Vector2.new(Center.X - 20, Center.Y + 20)
+        VelocityText.Size = 16
+        VelocityText.Center = true
+        VelocityText.Outline = true
+        VelocityText.Color = Color3.new(1,1,1)
+        VelocityText.Visible = true
+        VelocityText.Font = 2
+
+        local LOLText = Drawing.new("Text")
+        LOLText.Text = ".lol"
+        LOLText.Position = Vector2.new(Center.X + 35, Center.Y + 20)
+        LOLText.Size = 16
+        LOLText.Center = true
+        LOLText.Outline = true
+        LOLText.Color = Color3.fromRGB(255,0,0)
+        LOLText.Visible = true
+        LOLText.Font = 2
+
+        local angle = 0
+        CrosshairConnection = RunService.RenderStepped:Connect(function()
+            Center = Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)
+            for i, line in ipairs(CrosshairLines) do
+                local a = angle + (math.pi*2/LineCount)*(i-1)
+                local from = Vector2.new(Center.X + math.cos(a) * Radius, Center.Y + math.sin(a) * Radius)
+                local to = Vector2.new(Center.X + math.cos(a) * (Radius + LineLength), Center.Y + math.sin(a) * (Radius + LineLength))
+                line.From = from
+                line.To = to
+            end
+            Dot.Position = Center
+            VelocityText.Position = Vector2.new(Center.X - 20, Center.Y + 20)
+            LOLText.Position = Vector2.new(Center.X + 35, Center.Y + 20)
+            angle = angle + 0.05
+        end)
+
+        CrosshairObjects = {Dot, VelocityText, LOLText}
+        for _, line in ipairs(CrosshairLines) do
+            table.insert(CrosshairObjects, line)
+        end
+
+    else
+        -- === REMOVE CROSSHAIR ===
+        if CrosshairConnection then
+            CrosshairConnection:Disconnect()
+            CrosshairConnection = nil
+        end
+        if CrosshairObjects then
+            for _, obj in ipairs(CrosshairObjects) do
+                obj:Remove()
+            end
+            CrosshairObjects = nil
+        end
+    end
+end)
+
 -- ==== ESP / Visuals ====
 local ESPGroup = Tabs.Esp:AddLeftGroupbox("Player Visuals", "eye")
 
@@ -191,6 +275,23 @@ local ESPHighlightToggle = ESPGroup:AddToggle("ESPEnabled", {
     Text = "Enable Highlight",
     Default = false,
     Tooltip = "Enable player highlights (chams)"
+})
+
+-- Highlight color variable
+local HighlightColor = Color3.fromRGB(0,0,255) -- default blue
+
+-- Color picker for highlight
+ESPHighlightToggle:AddColorPicker("ESPHighlightColor", {
+    Default = Color3.fromRGB(255, 0, 0),    Title = "Highlight Color",
+    Callback = function(Value)
+        HighlightColor = Value
+        -- Update existing highlights if any
+        for _, h in pairs(Highlights) do
+            if h then
+                h.FillColor = HighlightColor
+            end
+        end
+    end
 })
 
 -- Sub-toggles
@@ -263,8 +364,8 @@ local function createESP(plr)
 
     if ESPHighlightToggle.Value then
         local h = Instance.new("Highlight")
-        h.FillColor = Color3.fromRGB(0,0,255)
-        h.OutlineColor = Color3.new(1,1,1)
+        h.FillColor = Color3.fromRGB(255, 0, 0) -- default red
+h.OutlineColor = Color3.new(1,1,1)
         h.FillTransparency = 0.25
         h.OutlineTransparency = 0
         h.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
