@@ -52,8 +52,7 @@ local Tabs = {
     Main = Window:AddTab("Main", "user"),
     Esp = Window:AddTab({Name = "Visuals", Description = "Visuals & Players & World Options", Icon = "eye"}),
     AutoFarm = Window:AddTab({Name = "AutoFarm", Description = "Automatically Farm", Icon = "axe"}),
-    Configuration = Window:AddTab({Name = "Configuration", Description = "Settings & Configs", Icon = "file"})
-
+ 
 }-- ==== Silent Aim Group ====
 local SAGroup = Tabs.Main:AddLeftGroupbox("Silent Aim", "crosshair")
 local SAFOV = 100
@@ -679,86 +678,89 @@ task.spawn(function()
     end
 end)
 
--- // CONFIGURATION TAB
-local HttpService = game:GetService("HttpService")
-local ConfigFolder = "VelocityConfigs" -- folder in executor workspace
-
--- create folder if it doesn't exist
-if not isfolder(ConfigFolder) then
-    makefolder(ConfigFolder)
-end
-
-local ConfigTab = Tabs.Configuration
-local ConfigGroup = ConfigTab:AddLeftGroupbox("Config Manager")
-
-local ConfigName = ""
-local AutoLoadLast = false
-
-ConfigGroup:AddInput("ConfigNameInput", {
-    Text = "Config Name",
-    Default = "",
-    Placeholder = "Enter config name...",
-    Callback = function(Value)
-        ConfigName = Value
-    end
+-- Configuration Tab
+local Configuration = Window:AddTab({
+    Name = "Configuration",
+    Description = "Settings & Configs",
+    Icon = "file"
 })
 
--- Save config
-ConfigGroup:AddButton("Save Config", function()
-    if ConfigName == "" then return end
-    local Data = Library:GetConfig() -- gets all UI values
-    writefile(ConfigFolder.."/"..ConfigName..".json", HttpService:JSONEncode(Data))
-    Library:Notify("Config '"..ConfigName.."' saved!")
-end)
+-- =========================
+-- Left Groupbox: Menu / UI
+-- =========================
+local MenuGroup = Configuration:AddLeftGroupbox("Menu", "wrench")
 
--- Load config
-ConfigGroup:AddButton("Load Config", function()
-    if ConfigName == "" then return end
-    if isfile(ConfigFolder.."/"..ConfigName..".json") then
-        local Data = HttpService:JSONDecode(readfile(ConfigFolder.."/"..ConfigName..".json"))
-        Library:LoadConfig(Data)
-        Library:Notify("Config '"..ConfigName.."' loaded!")
-    else
-        Library:Notify("Config not found!")
-    end
-end)
-
--- Delete config
-ConfigGroup:AddButton("Delete Config", function()
-    if ConfigName == "" then return end
-    if isfile(ConfigFolder.."/"..ConfigName..".json") then
-        delfile(ConfigFolder.."/"..ConfigName..".json")
-        Library:Notify("Config '"..ConfigName.."' deleted!")
-    else
-        Library:Notify("Config not found!")
-    end
-end)
-
--- Auto-load last config toggle
-ConfigGroup:AddToggle("AutoLoadLastConfig", {
-    Text = "Auto-load Last Config",
-    Default = false,
-    Callback = function(Value)
-        AutoLoadLast = Value
-        if Value then
-            writefile(ConfigFolder.."/AutoLoad.json", ConfigName)
-        else
-            if isfile(ConfigFolder.."/AutoLoad.json") then
-                delfile(ConfigFolder.."/AutoLoad.json")
-            end
-        end
-    end
+MenuGroup:AddToggle("KeybindMenuOpen", {
+    Default = Library.KeybindFrame.Visible,
+    Text = "Open Keybind Menu",
+    Callback = function(value)
+        Library.KeybindFrame.Visible = value
+    end,
 })
 
--- Auto-load if setting exists
-if isfile(ConfigFolder.."/AutoLoad.json") then
-    local LastConfig = readfile(ConfigFolder.."/AutoLoad.json")
-    if isfile(ConfigFolder.."/"..LastConfig..".json") then
-        local Data = HttpService:JSONDecode(readfile(ConfigFolder.."/"..LastConfig..".json"))
-        Library:LoadConfig(Data)
-        Library:Notify("Auto-loaded config: "..LastConfig)
-    end
-end
+MenuGroup:AddToggle("ShowCustomCursor", {
+    Text = "Custom Cursor",
+    Default = true,
+    Callback = function(Value)
+        Library.ShowCustomCursor = Value
+    end,
+})
+
+MenuGroup:AddDropdown("NotificationSide", {
+    Values = { "Left", "Right" },
+    Default = "Right",
+    Text = "Notification Side",
+    Callback = function(Value)
+        Library:SetNotifySide(Value)
+    end,
+})
+
+MenuGroup:AddDropdown("DPIDropdown", {
+    Values = { "50%", "75%", "100%", "125%", "150%", "175%", "200%" },
+    Default = "100%",
+    Text = "DPI Scale",
+    Callback = function(Value)
+        Value = Value:gsub("%%", "")
+        local DPI = tonumber(Value)
+        Library:SetDPIScale(DPI)
+    end,
+})
+
+MenuGroup:AddDivider()
+MenuGroup:AddLabel("Menu bind")
+    :AddKeyPicker("MenuKeybind", { Default = "RightShift", NoUI = true, Text = "Menu keybind" })
+
+MenuGroup:AddButton("Unload", function()
+    Library:Unload()
+end)
+
+Library.ToggleKeybind = Options.MenuKeybind
+
+
+-- =========================
+-- Right Groupbox: Configs
+-- =========================
+local ConfigGroup = Configuration:AddRightGroupbox("Config Manager", "cog")
+
+-- Hook managers into library
+ThemeManager:SetLibrary(Library)
+SaveManager:SetLibrary(Library)
+
+-- Ignore theme + menu keybind in configs
+SaveManager:IgnoreThemeSettings()
+SaveManager:SetIgnoreIndexes({ "MenuKeybind" })
+
+-- Folder structure
+ThemeManager:SetFolder("MyScriptHub")
+SaveManager:SetFolder("MyScriptHub/specific-game")
+SaveManager:SetSubFolder("specific-place")
+
+-- Force managers into RIGHT groupbox
+SaveManager:BuildConfigSection(ConfigGroup)   -- ✅ Build config list, save/load, etc
+ThemeManager:ApplyToGroupbox(ConfigGroup)     -- ✅ Add theme dropdowns here
+
+-- Auto-load if marked
+SaveManager:LoadAutoloadConfig()
 
 -- ==== Finish Setup ====
 ThemeManager:SetLibrary(Library)
