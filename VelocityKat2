@@ -65,6 +65,7 @@ local HitPart = "HumanoidRootPart"
 local SAHitChance = 100 -- default 100%
 local SASnaplines = false
 local SnaplineDrawing = nil
+local CircleMode = "Center" -- "Center" or "Follow Crosshair"
 
 local SAToggle = SAGroup:AddToggle("SilentAimToggle", {
     Text = "Enable Silent Aim",
@@ -78,7 +79,16 @@ local SAToggle = SAGroup:AddToggle("SilentAimToggle", {
             C2 = Drawing.new("Circle")
 
             SAConnections.RenderStepped = RunService.Stepped:Connect(function()
-                local sc = Vector2.new(CC.ViewportSize.X/2, CC.ViewportSize.Y/2)
+                local sc
+if CircleMode == "Center" then
+    sc = Vector2.new(CC.ViewportSize.X/2, CC.ViewportSize.Y/2)
+else
+    local mouse = LP:GetMouse()
+    sc = Vector2.new(mouse.X, mouse.Y)
+end
+
+C1.Position = sc
+C2.Position = sc
                 SA.fov = SAFOV
 
                 C1.Position = sc
@@ -198,6 +208,15 @@ SAToggle:AddColorPicker("SAFOVColor", {
     Default = FOVColor,
     Title = "FOV Color",
     Callback = function(Value) FOVColor = Value end
+})
+
+SAGroup:AddDropdown("SAFOVModeDropdown", {
+    Text = "FOV Circle Mode",
+    Values = {"Center", "Follow Crosshair"},
+    Default = "Center",
+    Callback = function(Value)
+        CircleMode = Value
+    end
 })
 
 -- Filled/Outline toggles
