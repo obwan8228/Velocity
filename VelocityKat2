@@ -1,3 +1,4 @@
+
 -- ==== Load Obsidian Library & Setup ====
 local repo = "https://raw.githubusercontent.com/deividcomsono/Obsidian/main/"
 local Library = loadstring(game:HttpGet(repo .. "Library.lua"))()
@@ -49,7 +50,8 @@ local Window = Library:CreateWindow({
 -- Tabs
 local Tabs = {
     Main = Window:AddTab("Main", "user"),
-    Esp = Window:AddTab({Name = "Visuals", Description = "Visuals & Players & World Options", Icon = "eye"})
+    Esp = Window:AddTab({Name = "Visuals", Description = "Visuals & Players & World Options", Icon = "eye"}),
+    AutoFarm = Window:AddTab({Name = "AutoFarm", Description = "Automatically Farm", Icon = "gear"})
 }
 
 -- ==== Silent Aim Group ====
@@ -586,6 +588,102 @@ end)
 
 WorldGroup:AddButton("FPS Boost (BloxStrap)",function()
     loadstring(game:HttpGet('https://raw.githubusercontent.com/qwertyui-is-back/Bloxstrap/main/Initiate.lua', true))()
+end)
+
+-- Services
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
+
+-- Variables
+local followDistance = 2
+local sideOffset = 1
+local followTime = 1.5
+local knifeName = "Knife"
+local equipInterval = 0.5
+
+-- Current character reference
+local currentChar = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+LocalPlayer.CharacterAdded:Connect(function(char)
+    currentChar = char
+end)
+
+-- Add groupbox inside existing AutoFarm tab
+local autoFarmGroup = Tabs.AutoFarm:AddLeftGroupbox("AutoFarm Settings")
+
+-- Follow Players toggle
+local followToggle = autoFarmGroup:AddToggle({
+    Name = "Enable AutoFarm",
+    Flag = "AutoFarmToggle",
+    Default = false
+})
+
+-- Auto Equip Knife toggle
+local equipToggle = autoFarmGroup:AddToggle({
+    Name = "Auto Equip Knife",
+    Flag = "AutoEquipKnifeToggle",
+    Default = false
+})
+
+-- Helper: get next player
+local function getNextPlayer(currentIndex)
+    local all = Players:GetPlayers()
+    if #all <= 1 then return nil, 0 end
+
+    local index = currentIndex or 0
+    local tries = 0
+    repeat
+        index = index + 1
+        if index > #all then index = 1 end
+        tries = tries + 1
+    until all[index] ~= LocalPlayer or tries > #all
+
+    return all[index] ~= LocalPlayer and all[index] or nil, index
+end
+
+-- Follow Players loop
+task.spawn(function()
+    local currentIndex = 0
+    while true do
+        local followEnabled = followToggle.Value -- read toggle value each loop
+        if followEnabled then
+            local target
+            target, currentIndex = getNextPlayer(currentIndex)
+            if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
+                local startTime = tick()
+                while tick() - startTime < followTime and followToggle.Value do
+                    local hrp = target.Character:FindFirstChild("HumanoidRootPart")
+                    if currentChar and hrp and currentChar:FindFirstChild("HumanoidRootPart") then
+                        local backPos = hrp.Position - hrp.CFrame.LookVector * followDistance
+                        local sidePos = backPos + hrp.CFrame.RightVector * sideOffset
+                        currentChar.HumanoidRootPart.CFrame = CFrame.new(sidePos, hrp.Position)
+                    end
+                    RunService.RenderStepped:Wait()
+                end
+            else
+                task.wait(0.2)
+            end
+        else
+            task.wait(0.2)
+        end
+    end
+end)
+
+-- Auto Equip Knife loop
+task.spawn(function()
+    while true do
+        local autoEquipEnabled = equipToggle.Value -- read toggle value each loop
+        if autoEquipEnabled then
+            local backpack = LocalPlayer:FindFirstChild("Backpack")
+            if backpack and currentChar then
+                local knife = backpack:FindFirstChild(knifeName)
+                if knife then
+                    currentChar.Humanoid:EquipTool(knife)
+                end
+            end
+        end
+        task.wait(equipInterval)
+    end
 end)
 
 -- // CONFIGURATION TAB
