@@ -88,35 +88,36 @@ local Flags = {
             Fonts[name] = Font.new(RegisteredFont, Enum.FontWeight.Regular, Enum.FontStyle.Normal)
         end
     end
+
 local MiscOptions = {
     ["Enabled"] = true;
     ["Render Distance"] = 10000; 
     -- Chams   
     ["ChamsEnabled"] = true; 
-    ["Chams Fill"] = { Color = rgb(0, 255, 255), Transparency = 0.9 };
+    ["Chams Fill"] = { Color = rgb(255, 0, 0), Transparency = 0.9 };
     ["Chams Outline"] = { Color = rgb(255, 0, 0), Transparency = 0.4 };
 
      -- Boxes
     ["Boxes"] = true;
-    ["BoxType"] = "Normal";
-    ["Box Gradient 1"] = { Color = rgb(0, 255, 255), Transparency = 0.9 };
-    ["Box Gradient 2"] = { Color = rgb(255, 0, 0), Transparency = 0.4 };
-    ["Box Gradient Rotation"] = 90;
+    ["BoxType"] = "Corner";
+    ["Box Gradient 1"] = { Color = rgb(255, 255, 255), Transparency = 0.9 };
+    ["Box Gradient 2"] = { Color = rgb(255, 255, 255), Transparency = 0.4 };
+    ["Box Gradient Rotation"] = 900;
     ["Box Fill"] = true; 
-    ["Box Fill 1"] = { Color = rgb(0, 255, 255), Transparency = 0.9 };
-    ["Box Fill 2"] = { Color = rgb(255, 255, 255), Transparency = 0.9 };
-    ["Box Fill Rotation"] = 0;
+    ["Box Fill 1"] = { Color = rgb(255, 255, 255), Transparency = 0.3 };
+    ["Box Fill 2"] = { Color = rgb(0, 0, 0), Transparency = 0.3 };
+    ["Box Fill Rotation"] = true;
 
     ["Healthbar"] = true; 
     ["Healthbar_Position"] = "Left"; 
     ["Healthbar_Number"] = true; 
-    ["Healthbar_Low"] = { Color = rgb(247, 24, 180), Transparency = 1 }; --
-    ["Healthbar_Medium"] = { Color = rgb(17, 30, 211), Transparency = 1 }; --
+    ["Healthbar_Low"] = { Color = rgb(255, 0, 0), Transparency = 1 }; --
+    ["Healthbar_Medium"] = { Color = rgb(255, 165, 0), Transparency = 1 }; --
     ["Healthbar_Animations"] = true; 
-    ["Healthbar_High"] = { Color = rgb(173, 69, 86), Transparency = 1 }; -- 
-    ["Healthbar_Font"] = "ProggyClean";
-    ["Healthbar_Text_Size"] = 12;
-    ["Healthbar_Thickness"] = 1;
+    ["Healthbar_High"] = { Color = rgb(0, 128, 0), Transparency = 1 }; -- 
+    ["Healthbar_Font"] = "SmallestPixel";
+    ["Healthbar_Text_Size"] = 8;
+    ["Healthbar_Thickness"] = 2;
     ["Healthbar_Tween"] = true;
     ["Healthbar_EasingStyle"] = "Circular"; 
     ["Healthbar_EasingDirection"] = "InOut"; 
@@ -126,21 +127,21 @@ local MiscOptions = {
     ["Name_Text"] = true; 
     ["Name_Text_Color"] = { Color = rgb(255, 255, 255) };
     ["Name_Text_Position"] = "Top";
-    ["Name_Text_Font"] = "ProggyClean";
-    ["Name_Text_Size"] = 12;
+    ["Name_Text_Font"] = "SmallestPixel";
+    ["Name_Text_Size"] = 8;
     
     ["Distance_Text"] = true; 
     ["Distance_Text_Color"] = { Color = rgb(255, 255, 255) };
     ["Distance_Text_Position"] = "Bottom";
     ["Distance_Text_Font"] = "ProggyClean";
-    ["Distance_Text_Size"] = 12;
+    ["Distance_Text_Size"] = 8;
 
     ["Weapon_Text"] = true,
     ["Weapon_Text_Color"] = { Color = rgb(255, 255, 255) };
-    ["Weapon_Text_Position"] = "Bottom";
+    ["Weapon_Text_Position"] = "Top";
     ["Weapon_Text_Font"] = "ProggyClean";
     ["Weapon_Text_Size"] = 12;
-};  
+}; 
 
 local Options = MiscOptions
 
