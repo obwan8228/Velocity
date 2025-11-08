@@ -88,6 +88,59 @@ local Flags = {
             Fonts[name] = Font.new(RegisteredFont, Enum.FontWeight.Regular, Enum.FontStyle.Normal)
         end
     end
+local MiscOptions = {
+    ["Enabled"] = true;
+    ["Render Distance"] = 10000; 
+    -- Chams   
+    ["ChamsEnabled"] = true; 
+    ["Chams Fill"] = { Color = rgb(0, 255, 255), Transparency = 0.9 };
+    ["Chams Outline"] = { Color = rgb(255, 0, 0), Transparency = 0.4 };
+
+     -- Boxes
+    ["Boxes"] = true;
+    ["BoxType"] = "Normal";
+    ["Box Gradient 1"] = { Color = rgb(0, 255, 255), Transparency = 0.9 };
+    ["Box Gradient 2"] = { Color = rgb(255, 0, 0), Transparency = 0.4 };
+    ["Box Gradient Rotation"] = 90;
+    ["Box Fill"] = true; 
+    ["Box Fill 1"] = { Color = rgb(0, 255, 255), Transparency = 0.9 };
+    ["Box Fill 2"] = { Color = rgb(255, 255, 255), Transparency = 0.9 };
+    ["Box Fill Rotation"] = 0;
+
+    ["Healthbar"] = true; 
+    ["Healthbar_Position"] = "Left"; 
+    ["Healthbar_Number"] = true; 
+    ["Healthbar_Low"] = { Color = rgb(247, 24, 180), Transparency = 1 }; --
+    ["Healthbar_Medium"] = { Color = rgb(17, 30, 211), Transparency = 1 }; --
+    ["Healthbar_Animations"] = true; 
+    ["Healthbar_High"] = { Color = rgb(173, 69, 86), Transparency = 1 }; -- 
+    ["Healthbar_Font"] = "ProggyClean";
+    ["Healthbar_Text_Size"] = 12;
+    ["Healthbar_Thickness"] = 1;
+    ["Healthbar_Tween"] = true;
+    ["Healthbar_EasingStyle"] = "Circular"; 
+    ["Healthbar_EasingDirection"] = "InOut"; 
+    ["Healthbar_Easing_Speed"] = 1;
+
+    -- Text Based Elements
+    ["Name_Text"] = true; 
+    ["Name_Text_Color"] = { Color = rgb(255, 255, 255) };
+    ["Name_Text_Position"] = "Top";
+    ["Name_Text_Font"] = "ProggyClean";
+    ["Name_Text_Size"] = 12;
+    
+    ["Distance_Text"] = true; 
+    ["Distance_Text_Color"] = { Color = rgb(255, 255, 255) };
+    ["Distance_Text_Position"] = "Bottom";
+    ["Distance_Text_Font"] = "ProggyClean";
+    ["Distance_Text_Size"] = 12;
+
+    ["Weapon_Text"] = true,
+    ["Weapon_Text_Color"] = { Color = rgb(255, 255, 255) };
+    ["Weapon_Text_Position"] = "Bottom";
+    ["Weapon_Text_Font"] = "ProggyClean";
+    ["Weapon_Text_Size"] = 12;
+};  
 
 local Options = MiscOptions
 
@@ -1063,7 +1116,7 @@ local Options = MiscOptions
                 end 
 
                 local DistanceLabel = Items.Distance
-                local Text = tostring( math.round(Distance) )  .. " meter"
+                local Text = tostring( math.round(Distance) )  .. "m"
                 if DistanceLabel.Text ~= Text then 
                     DistanceLabel.Text = Text
                 end 
@@ -1380,22 +1433,4 @@ local Options = MiscOptions
 
     Esp.Loop = RunService:BindToRenderStep("Run Loop", 400, Esp.Update)
 
-local upd = function()
-    for key, value in pairs(MiscOptions) do
-        Esp.RefreshElements(key, value)
-    end
-end
-for _, player in Players:GetPlayers() do
-    if player ~= Players.LocalPlayer then
-        Esp.CreateObject(player)
-        upd()
-    end
-end
-Players.PlayerAdded:Connect(function(player)
-    Esp.CreateObject(player)
-    upd()
-end)
-Players.PlayerRemoving:Connect(function(player)
-    Esp.RemovePlayer(player)
-    upd()
-end)
+return Esp, MiscOptions
