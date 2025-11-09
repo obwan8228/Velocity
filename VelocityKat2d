@@ -93,7 +93,7 @@ local MiscOptions = {
     ["Enabled"] = true;
     ["Render Distance"] = 10000; 
     -- Chams   
-    ["ChamsEnabled"] = true; 
+    ["ChamsEnabled"] = false; 
     ["Chams Fill"] = { Color = rgb(255, 0, 0), Transparency = 0.9 };
     ["Chams Outline"] = { Color = rgb(255, 0, 0), Transparency = 0.4 };
 
