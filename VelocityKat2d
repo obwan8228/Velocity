@@ -116,7 +116,7 @@ local MiscOptions = {
     ["Healthbar_Animations"] = true; 
     ["Healthbar_High"] = { Color = rgb(0, 255, 0), Transparency = 1 }; -- 
     ["Healthbar_Font"] = "SmallestPixel";
-    ["Healthbar_Text_Size"] = 6;
+    ["Healthbar_Text_Size"] = 5;
     ["Healthbar_Thickness"] = 1;
     ["Healthbar_Tween"] = true;
     ["Healthbar_EasingStyle"] = "Circular"; 
@@ -128,13 +128,13 @@ local MiscOptions = {
     ["Name_Text_Color"] = { Color = rgb(255, 255, 255) };
     ["Name_Text_Position"] = "Top";
     ["Name_Text_Font"] = "SmallestPixel";
-    ["Name_Text_Size"] = 8;
+    ["Name_Text_Size"] = 6;
     
     ["Distance_Text"] = true; 
     ["Distance_Text_Color"] = { Color = rgb(255, 255, 255) };
     ["Distance_Text_Position"] = "Bottom";
     ["Distance_Text_Font"] = "ProggyClean";
-    ["Distance_Text_Size"] = 8;
+    ["Distance_Text_Size"] = 6;
 
     ["Weapon_Text"] = true,
     ["Weapon_Text_Color"] = { Color = rgb(255, 255, 255) };
