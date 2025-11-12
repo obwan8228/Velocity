@@ -116,8 +116,8 @@ local MiscOptions = {
     ["Healthbar_Animations"] = true; 
     ["Healthbar_High"] = { Color = rgb(0, 255, 0), Transparency = 1 }; -- 
     ["Healthbar_Font"] = "SmallestPixel";
-    ["Healthbar_Text_Size"] = 8;
-    ["Healthbar_Thickness"] = 2;
+    ["Healthbar_Text_Size"] = 6;
+    ["Healthbar_Thickness"] = 1;
     ["Healthbar_Tween"] = true;
     ["Healthbar_EasingStyle"] = "Circular"; 
     ["Healthbar_EasingDirection"] = "InOut"; 
