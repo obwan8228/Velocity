@@ -120,7 +120,7 @@ local MiscOptions = {
     ["Box Fill"] = true; 
     ["Box Fill 1"] = { Color = rgb(139, 0, 0), Transparency = 0.3 };
     ["Box Fill 2"] = { Color = rgb(0, 0, 0), Transparency = 0.3 };
-    ["Box Fill Rotation"] = true;
+    ["Box Fill Rotation"] = 90;
 
     ["Healthbar"] = true; 
     ["Healthbar_Position"] = "Left"; 
