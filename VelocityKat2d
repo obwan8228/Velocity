@@ -120,7 +120,7 @@ local MiscOptions = {
     ["Box Fill"] = true; 
     ["Box Fill 1"] = { Color = rgb(139, 0, 0), Transparency = 0.3 };
     ["Box Fill 2"] = { Color = rgb(0, 0, 0), Transparency = 0.3 };
-    ["Box Fill Rotation"] = 90;
+    ["Box Fill Rotation"] = 180;
 
     ["Healthbar"] = true; 
     ["Healthbar_Position"] = "Left"; 
@@ -1131,7 +1131,7 @@ local Options = MiscOptions
                 end 
 
                 local DistanceLabel = Items.Distance
-                local Text = tostring( math.round(Distance) )  .. "m"
+                local Text = tostring( math.round(Distance) )  .. " meter"
                 if DistanceLabel.Text ~= Text then 
                     DistanceLabel.Text = Text
                 end 
