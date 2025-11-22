@@ -113,10 +113,10 @@ local MiscOptions = {
 
      -- Boxes
     ["Boxes"] = true;
-    ["BoxType"] = "Normal";
+    ["BoxType"] = "Corner";
     ["Box Gradient 1"] = { Color = rgb(255, 255, 255), Transparency = 0.9 };
     ["Box Gradient 2"] = { Color = rgb(119, 120, 255), Transparency = 0.4 };
-    ["Box Gradient Rotation"] = 90;
+    ["Box Gradient Rotation"] = 180;
     ["Box Fill"] = true; 
     ["Box Fill 1"] = { Color = rgb(119, 120, 255), Transparency = 0.3 };
     ["Box Fill 2"] = { Color = rgb(0, 0, 0), Transparency = 0.3 };
@@ -126,7 +126,7 @@ local MiscOptions = {
     ["Healthbar_Position"] = "Left"; 
     ["Healthbar_Number"] = true; 
     ["Healthbar_Low"] = { Color = rgb(255, 0, 0), Transparency = 1 }; --
-    ["Healthbar_Medium"] = { Color = rgb(255, 165, 0), Transparency = 1 }; --
+    ["Healthbar_Medium"] = { Color = rgb(119, 120, 255), Transparency = 1 }; --
     ["Healthbar_Animations"] = true; 
     ["Healthbar_High"] = { Color = rgb(0, 255, 0), Transparency = 1 }; -- 
     ["Healthbar_Font"] = "SmallestPixel";
