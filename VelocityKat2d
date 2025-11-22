@@ -116,7 +116,7 @@ local MiscOptions = {
     ["BoxType"] = "Normal";
     ["Box Gradient 1"] = { Color = rgb(255, 255, 255), Transparency = 0.9 };
     ["Box Gradient 2"] = { Color = rgb(119, 120, 255), Transparency = 0.4 };
-    ["Box Gradient Rotation"] = 180;
+    ["Box Gradient Rotation"] = 90;
     ["Box Fill"] = true; 
     ["Box Fill 1"] = { Color = rgb(119, 120, 255), Transparency = 0.3 };
     ["Box Fill 2"] = { Color = rgb(0, 0, 0), Transparency = 0.3 };
