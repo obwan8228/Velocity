@@ -8,40 +8,6 @@ local angle, empty_cfr, cfr = CFrame.Angles, CFrame.new(), CFrame.new
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
-local TeamCheckEnabled = true
-
-local function isEnemy(player)
-    if not TeamCheckEnabled then
-        return true
-    end
-    return player ~= LocalPlayer and player.Team ~= LocalPlayer.Team
-end
-
-local upd = function()
-    for key, value in pairs(MiscOptions) do
-        Esp.RefreshElements(key, value)
-    end
-end
-
-for _, player in Players:GetPlayers() do
-    if isEnemy(player) then
-        Esp.CreateObject(player)
-        upd()
-    end
-end
-
-Players.PlayerAdded:Connect(function(player)
-    if isEnemy(player) then
-        Esp.CreateObject(player)
-        upd()
-    end
-end)
-
-Players.PlayerRemoving:Connect(function(player)
-    Esp.RemovePlayer(player)
-    upd()
-end)
-
 local Flags = {
     ["Players_CHAMS"] = false,
     ["Players_FILL_CHAMS"] = {Color = rgb(255, 0, 0), Transparency = 0.5},
