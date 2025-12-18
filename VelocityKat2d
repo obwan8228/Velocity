@@ -1416,15 +1416,6 @@ local Options = MiscOptions
 
 return Esp, MiscOptions
 
-local TeamCheckEnabled = true
-
-local function isEnemy(player)
-    if not TeamCheckEnabled then
-        return true
-    end
-    return player ~= LocalPlayer and player.Team ~= LocalPlayer.Team
-end
-
 local upd = function()
     for key, value in pairs(MiscOptions) do
         Esp.RefreshElements(key, value)
