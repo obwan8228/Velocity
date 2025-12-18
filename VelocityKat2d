@@ -1414,7 +1414,6 @@ local Options = MiscOptions
 
     Esp.Loop = RunService:BindToRenderStep("Run Loop", 400, Esp.Update)
 
-return Esp, MiscOptions
 
 local upd = function()
     for key, value in pairs(MiscOptions) do
@@ -1440,3 +1439,6 @@ Players.PlayerRemoving:Connect(function(player)
     Esp.RemovePlayer(player)
     upd()
 end)
+
+-- ✅ RETURN MUST BE LAST
+return Esp, MiscOptions
