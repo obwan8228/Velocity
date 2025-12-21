@@ -1422,7 +1422,7 @@ local upd = function()
 end
 
 for _, player in Players:GetPlayers() do
-    if isEnemy(player) then
+    if player ~= LocalPlayer then
         Esp.CreateObject(player)
         upd()
     end
