@@ -1448,3 +1448,5 @@ Players.PlayerRemoving:Connect(function(player)
     Esp.RemovePlayer(player)
     upd()
 end)
+
+return Esp, MiscOptions
