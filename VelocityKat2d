@@ -79,7 +79,7 @@ local MiscOptions = {
 
      -- Boxes
     ["Boxes"] = true;
-    ["BoxType"] = "Normal
+    ["BoxType"] = "Corner
     ["Box Gradient 1"] = { Color = rgb(255, 20, 147), Transparency = 0.9 };
     ["Box Gradient 2"] = { Color = rgb(119, 120, 255), Transparency = 0.4 };
     ["Box Gradient Rotation"] = 180;
