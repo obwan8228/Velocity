@@ -1418,7 +1418,11 @@ local Options = MiscOptions
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
-UpdateESP()
+local upd = function()
+    for key, value in pairs(MiscOptions) do
+        Esp.RefreshElements(key, value)
+    end
+end
 
 -- Existing players
 for _, player in ipairs(Players:GetPlayers()) do
