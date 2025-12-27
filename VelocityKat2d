@@ -92,7 +92,7 @@ local MiscOptions = {
     ["Healthbar_Position"] = "Left"; 
     ["Healthbar_Number"] = true; 
     ["Healthbar_Low"] = { Color = rgb(255, 0, 0), Transparency = 1 }; --
-    ["Healthbar_Medium"] = { Color = rgb(119, 120, 255), Transparency = 1 }; --
+    ["Healthbar_Medium"] = { Color = rgb(255, 193, 0), Transparency = 1 }; --
     ["Healthbar_Animations"] = true; 
     ["Healthbar_High"] = { Color = rgb(0, 255, 0), Transparency = 1 }; -- 
     ["Healthbar_Font"] = "SmallestPixel";
