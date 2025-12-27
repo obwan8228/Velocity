@@ -79,8 +79,8 @@ local MiscOptions = {
 
      -- Boxes
     ["Boxes"] = true;
-    ["BoxType"] = "Corner
-    ["Box Gradient 1"] = { Color = rgb(255, 20, 147), Transparency = 0.9 };
+    ["BoxType"] = "Corner";
+    ["Box Gradient 1"] = { Color = rgb(255, 255, 255), Transparency = 0.9 };
     ["Box Gradient 2"] = { Color = rgb(119, 120, 255), Transparency = 0.4 };
     ["Box Gradient Rotation"] = 180;
     ["Box Fill"] = true; 
@@ -1419,8 +1419,14 @@ local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
 local upd = function()
-    for key, value in pairs(MiscOptions) do
-        Esp.RefreshElements(key, value)
+    if not Esp or not Esp.RefreshElements then return end
+    for _, player in pairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer then
+            -- Pass the player's name to avoid 'match' errors
+            Esp.RefreshElements(player.Name)
+        end
+    end
+end
 
 -- Existing players
 for _, player in ipairs(Players:GetPlayers()) do
