@@ -1418,13 +1418,11 @@ local Options = MiscOptions
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
-local upd = function()
+local function upd()
     if not Esp or not Esp.RefreshElements then return end
-    for _, player in pairs(Players:GetPlayers()) do
-        if player ~= LocalPlayer then
-            -- Pass the player's name to avoid 'match' errors
-            Esp.RefreshElements(player.Name)
-        end
+
+    for key, value in pairs(MiscOptions) do
+        Esp.RefreshElements(key, value)
     end
 end
 
@@ -1434,23 +1432,27 @@ for _, player in ipairs(Players:GetPlayers()) do
         Esp.CreateObject(player)
     end
 end
+
 upd()
 
 -- New players
 Players.PlayerAdded:Connect(function(player)
     if player == LocalPlayer then return end
 
-    -- wait for character (VERY IMPORTANT)
-    player.CharacterAdded:Wait()
+    player.CharacterAdded:Connect(function()
+        task.wait(0.2)
 
-    Esp.CreateObject(player)
-    upd()
+        if not Esp.Players[player.Name] then
+            Esp.CreateObject(player)
+        end
+
+        upd()
+    end)
 end)
 
 -- Leaving players
 Players.PlayerRemoving:Connect(function(player)
     Esp.RemovePlayer(player)
-    upd()
 end)
 
 return Esp, MiscOptions
