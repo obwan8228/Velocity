@@ -8,8 +8,6 @@ local angle, empty_cfr, cfr = CFrame.Angles, CFrame.new(), CFrame.new
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
-local TeamCheck = true -- default toggle value
-
 local function isTeammate(player)
     return player.Team == LocalPlayer.Team
 end
@@ -18,11 +16,11 @@ local function UpdateESP()
     for _, player in pairs(Players:GetPlayers()) do
         if player ~= LocalPlayer then
             if not TeamCheck or not isTeammate(player) then
-                -- Refresh ESP normally
-                Esp.RefreshElements(player)
+                -- Refresh ESP for enemies
+                Esp.RefreshElements(player.Name)
             else
                 -- Hide ESP for teammates
-                Esp.Remove(player)
+                Esp.Remove(player.Name)
             end
         end
     end
