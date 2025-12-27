@@ -1439,9 +1439,7 @@ local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
 local upd = function()
-    for key, value in pairs(MiscOptions) do
-        Esp.RefreshElements(key, value)
-    end
+    UpdateESP()
 end
 
 -- Existing players
