@@ -1419,8 +1419,12 @@ local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
 local upd = function()
-    for key, value in pairs(MiscOptions) do
-        Esp.RefreshElements(key, value)
+    if not Esp or not Esp.RefreshElements then return end
+    for _, player in pairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer then
+            -- Pass the player's name to avoid 'match' errors
+            Esp.RefreshElements(player.Name)
+        end
     end
 end
 
