@@ -79,7 +79,7 @@ local MiscOptions = {
 
      -- Boxes
     ["Boxes"] = true;
-    ["BoxType"] = "Corner";
+    ["BoxType"] = "Normal";
     ["Box Gradient 1"] = { Color = rgb(255, 193, 0), Transparency = 0.9 };
     ["Box Gradient 2"] = { Color = rgb(255, 0, 0), Transparency = 0.4 };
     ["Box Gradient Rotation"] = 180;
@@ -95,7 +95,7 @@ local MiscOptions = {
     ["Healthbar_Medium"] = { Color = rgb(255, 193, 0), Transparency = 1 }; --
     ["Healthbar_Animations"] = true; 
     ["Healthbar_High"] = { Color = rgb(0, 255, 0), Transparency = 1 }; -- 
-    ["Healthbar_Font"] = "SmallestPixel";
+    ["Healthbar_Font"] = "Tahoma Bold";
     ["Healthbar_Text_Size"] = 5;
     ["Healthbar_Thickness"] = 1;
     ["Healthbar_Tween"] = true;
@@ -107,13 +107,13 @@ local MiscOptions = {
     ["Name_Text"] = true; 
     ["Name_Text_Color"] = { Color = rgb(255, 255, 255) };
     ["Name_Text_Position"] = "Top";
-    ["Name_Text_Font"] = "SmallestPixel";
+    ["Name_Text_Font"] = "Tahoma Bold";
     ["Name_Text_Size"] = 6;
     
     ["Distance_Text"] = true; 
     ["Distance_Text_Color"] = { Color = rgb(255, 255, 255) };
     ["Distance_Text_Position"] = "Bottom";
-    ["Distance_Text_Font"] = "ProggyClean";
+    ["Distance_Text_Font"] = "Tahoma Bold";
     ["Distance_Text_Size"] = 6;
 
     ["Weapon_Text"] = true,
