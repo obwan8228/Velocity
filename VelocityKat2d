@@ -78,7 +78,7 @@ local MiscOptions = {
     ["Chams Outline"] = { Color = rgb(255, 0, 0), Transparency = 0.4 };
 
      -- Boxes
-    ["Boxes"] = true;
+    ["Boxes"] = false;
     ["BoxType"] = "Corner";
     ["Box Gradient 1"] = { Color = rgb(255, 255, 255), Transparency = 0.9 };
     ["Box Gradient 2"] = { Color = rgb(255, 255, 255), Transparency = 0.4 };
@@ -88,7 +88,7 @@ local MiscOptions = {
     ["Box Fill 2"] = { Color = rgb(0, 0, 0), Transparency = 0.3 };
     ["Box Fill Rotation"] = 180;
 
-    ["Healthbar"] = true; 
+    ["Healthbar"] = false; 
     ["Healthbar_Position"] = "Left"; 
     ["Healthbar_Number"] = true; 
     ["Healthbar_Low"] = { Color = rgb(255, 0, 0), Transparency = 1 }; --
@@ -104,19 +104,19 @@ local MiscOptions = {
     ["Healthbar_Easing_Speed"] = 1;
 
     -- Text Based Elements
-    ["Name_Text"] = true; 
+    ["Name_Text"] = false; 
     ["Name_Text_Color"] = { Color = rgb(255, 255, 255) };
     ["Name_Text_Position"] = "Top";
     ["Name_Text_Font"] = "SmallestPixel";
     ["Name_Text_Size"] = 6.7;
     
-    ["Distance_Text"] = true; 
+    ["Distance_Text"] = false; 
     ["Distance_Text_Color"] = { Color = rgb(255, 255, 255) };
     ["Distance_Text_Position"] = "Bottom";
     ["Distance_Text_Font"] = "SmallestPixel";
     ["Distance_Text_Size"] = 5;
 
-    ["Weapon_Text"] = true,
+    ["Weapon_Text"] = false,
     ["Weapon_Text_Color"] = { Color = rgb(255, 255, 255) };
     ["Weapon_Text_Position"] = "Top";
     ["Weapon_Text_Font"] = "SmallestPixel";
