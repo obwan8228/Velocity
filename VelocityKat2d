@@ -70,7 +70,7 @@ local Flags = {
     end
 
 local MiscOptions = {
-    ["Enabled"] = true;
+    ["Enabled"] = false;
     ["Render Distance"] = 200; 
     -- Chams   
     ["ChamsEnabled"] = false; 
