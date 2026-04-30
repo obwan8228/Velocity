@@ -10,7 +10,7 @@ local LocalPlayer = Players.LocalPlayer
 
 local Flags = {
     ["Players_CHAMS"] = false,
-    ["Players_FILL_CHAMS"] = {Color = rgb(255, 0, 0), Transparency = 0.5},
+    ["Players_FILL_CHAMS"] = {Color = rgb(90, 108, 198), Transparency = 0.5},
     ["Players_OUTLINE_CHAMS"] = {Color = rgb(0, 255, 0), Transparency = 0.3},
 }
     local FontNames = {
@@ -1097,7 +1097,7 @@ local Options = MiscOptions
                 end 
 
                 local DistanceLabel = Items.Distance
-                local Text = tostring( math.round(Distance) )  .. " meter"
+                local Text = tostring( math.round(Distance) )  .. "st"
                 if DistanceLabel.Text ~= Text then 
                     DistanceLabel.Text = Text
                 end 
