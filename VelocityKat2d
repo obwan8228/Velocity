@@ -82,11 +82,11 @@ local MiscOptions = {
     ["BoxType"] = "Normal";
     ["Box Gradient 1"] = { Color = rgb(90, 108, 198), Transparency = 0.9 };
     ["Box Gradient 2"] = { Color = rgb(255, 255, 255), Transparency = 0.4 };
-    ["Box Gradient Rotation"] = 180;
+    ["Box Gradient Rotation"] = 80;
     ["Box Fill"] = true; 
-    ["Box Fill 1"] = { Color = rgb(255, 255, 255), Transparency = 0.3 };
+    ["Box Fill 1"] = { Color = rgb(90, 108, 198), Transparency = 0.3 };
     ["Box Fill 2"] = { Color = rgb(0, 0, 0), Transparency = 0.3 };
-    ["Box Fill Rotation"] = 180;
+    ["Box Fill Rotation"] = 80;
 
     ["Healthbar"] = false; 
     ["Healthbar_Position"] = "Left"; 
